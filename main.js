@@ -13,12 +13,13 @@ let startScene, gameScene, gameOverScene;
 let scoreLabel;
 let mistakes = 8;
 let score = 0;
-let buttons = [];
+let notes = [];
 let streak = 0;
 let streakLabel;
+let redCircle, greenCircle, blueCircle;
+let noteColors = ["red", "green", "blue"];
 
 setup();
-
 
 function setup() {
 	stage = app.stage;
@@ -32,7 +33,7 @@ function setup() {
     stage.addChild(gameScene);
 
 	// #3 - Create the `gameOver` scene and make it invisible
-	gameOverScene = new PIXI.Container();
+		gameOverScene = new PIXI.Container();
     gameOverScene.visible = false;
     stage.addChild(gameOverScene);
 
@@ -54,7 +55,58 @@ function setup() {
 
 		*/
 
-    //Start update gameLoop
+	//keyboard events
+	let letterF = keyboard(70),
+			letterG = keyboard(71),
+			letterH = keyboard(72);
+
+	letterF.press = () =>{
+		//console.log("FFFFFFF");
+		redCircle.beginFill(0xFF9C9C);
+		redCircle.endFill();
+		gameScene.addChild(redCircle);
+		gameScene.removeChild(redCircle);
+	};
+
+	letterF.release = () =>{
+		//console.log("releasedF");
+		redCircle.beginFill(0xB20808);
+		redCircle.endFill
+		gameScene.addChild(redCircle);
+	};
+
+	letterG.press = () =>{
+		//console.log("GGGGGG");
+		greenCircle.beginFill(0x9CFF9C);
+		greenCircle.endFill();
+		gameScene.addChild(greenCircle);
+		gameScene.removeChild(greenCircle);
+	};
+
+	letterG.release = () =>{
+		//console.log("releasedG");
+		greenCircle.beginFill(0x08B208);
+		greenCircle.endFill();
+		gameScene.addChild(greenCircle);
+	};
+
+	letterH.press = () =>{
+		//console.log("HHHHHH");
+		blueCircle.beginFill(0x9C9CFF);
+		blueCircle.endFill();
+		gameScene.addChild(blueCircle);
+		gameScene.removeChild(blueCircle);
+	};
+
+	letterH.release = () =>{
+		//console.log("releasedH");
+		blueCircle.beginFill(0x0808B2);
+		blueCircle.endFill();
+		gameScene.addChild(blueCircle);
+	};
+
+
+    //Start update gameLoop------------------------------------------------------------>>
     app.ticker.add(gameLoop);
       function gameLoop(){
 
@@ -62,11 +114,36 @@ function setup() {
           let dt = 1/app.ticker.FPS;
           if(dt > 1/12) dt = 1/12;
 
-        //move buttons
-          for (let b of buttons){
-            b.move(dt)
+        //move notes
+          for (let n of notes){
+            n.move(dt)
           }
-      }
+					let rand = Math.floor(Math.random() * Math.floor(3));
+
+					if(dt % 3 == 0){
+						makeNotes(noteColors[rand]);
+					}
+
+					if(hitRightNote){
+						streak++;
+						score += 100;
+					}
+					else{
+						streak = 0;
+						if (mistakes != 0){
+							mistakes -= 1;
+						}
+						else{
+							end();
+							startScene.visible = false;
+							gameScene.visible = false;
+							gameOverScene.visible = true;
+							return;
+						}
+					}
+
+			//------------------------------------END GAME LOOP------------------------------->>
+		}
 }
 function createVisualsForScene(){
 	  let buttonStyle = new PIXI.TextStyle({
@@ -112,19 +189,25 @@ function createVisualsForScene(){
 		/*     ------------Game Scene-------------- 	*/
 		let textStyle = new PIXI.TextStyle({
 			fill: 0xFFFFFF,
-			fontSize: 18,
+			fontSize: 24,
+			fontFamily: "Arial"
+		});
+
+		let numberStyle = new PIXI.TextStyle({
+			fill: 0xFFFFFF,
+			fontSize: 28,
 			fontFamily: "Arial"
 		});
 
 		scoreLabel = new PIXI.Text();
-		scoreLabel.style = textStyle;
+		scoreLabel.style = numberStyle;
 		scoreLabel.x = 30;
 		scoreLabel.y = 200;
 		gameScene.addChild(scoreLabel);
 		increaseScoreBy(0);
 
 		streakLabel = new PIXI.Text();
-		streakLabel.style = textStyle;
+		streakLabel.style = numberStyle;
 		streakLabel.x = 30;
 		streakLabel.y = 300;
 		gameScene.addChild(streakLabel);
@@ -136,7 +219,7 @@ function createVisualsForScene(){
 		redLine.endFill();
 		gameScene.addChild(redLine);
 
-		let redCircle = new PIXI.Graphics();
+		redCircle = new PIXI.Graphics();
 		redCircle.beginFill(0xB20808);
 		redCircle.drawCircle(250,555,40);
 		redCircle.endFill();
@@ -148,7 +231,7 @@ function createVisualsForScene(){
 		redLine.endFill();
 		gameScene.addChild(greenLine);
 
-		let greenCircle = new PIXI.Graphics();
+		greenCircle = new PIXI.Graphics();
 		greenCircle.beginFill(0x08B208);
 		greenCircle.drawCircle(400,555,40);
 		redCircle.endFill();
@@ -160,7 +243,7 @@ function createVisualsForScene(){
 		redLine.endFill();
 		gameScene.addChild(blueLine);
 
-		let blueCircle = new PIXI.Graphics();
+		blueCircle = new PIXI.Graphics();
 		blueCircle.beginFill(0x0808B2);
 		blueCircle.drawCircle(550,555,40);
 		redCircle.endFill();
@@ -172,29 +255,150 @@ function createVisualsForScene(){
 		lineBorder.endFill();
 		gameScene.addChild(lineBorder);
 
-		//add notes to the lines
+		//--------------------------------------------
 
+
+		// 			----------GAME OVER SCENE---------------  	>>
+
+		let gameOverText = new PIXI.Text("Game over! \n		find a new band to join");
+		textStyle = new PIXI.TextStyle({
+			fill: 0x000000,
+			fontSize: 64,
+			fontFamily: "Arial"
+		});
+		gameOverText.style = textStyle;
+		gameOverText.x = 250;
+		gameOverText.y = sceneHeight/2 - 200;
+		gameOverScene.addChild(gameOverText);
+
+		let gameOverScoreLabel = new PIXI.Text();
+    textStyle = new PIXI.TextStyle({
+        fill:0xFFFFFF,
+        fontSize:36,
+        fontFamily: "Futura",
+        stroke: 0xFF0000,
+        strokeThickness: 6
+    });
+    gameOverScoreLabel.style = textStyle;
+    gameOverScoreLabel.x = 200;
+    gameOverScoreLabel.y = sceneHeight/2 + 50;
+    gameOverScene.addChild(gameOverScoreLabel);
+
+		// 		-----------------------------------------------		>>
+
+}
+
+function increaseScoreBy(value){
+	score += value;
+	//change score text
+	scoreLabel.text = `Score: ${score}`;
+}
+
+function increaseStreakBy(value){
+	streak += value;
+	//change score text
+	streakLabel.text = `Streak: ${streak}`;
+}
+
+function startGame(){
+	startScene.visible = false;
+  gameOverScene.visible = false;
+  gameScene.visible = true;
+
+	score = 0;
+	mistakes = 8;
+
+}
+
+function keyboard(keyCode) {
+  let key = {};
+  key.code = keyCode;
+  key.isDown = false;
+  key.isUp = true;
+  key.press = undefined;
+  key.release = undefined;
+  //The `downHandler`
+  key.downHandler = event => {
+    if (event.keyCode === key.code) {
+      if (key.isUp && key.press) key.press();
+      key.isDown = true;
+      key.isUp = false;
+    }
+    event.preventDefault();
+  };
+
+  //The `upHandler`
+  key.upHandler = event => {
+    if (event.keyCode === key.code) {
+      if (key.isDown && key.release) key.release();
+      key.isDown = false;
+      key.isUp = true;
+    }
+    event.preventDefault();
+  };
+
+  //Attach event listeners
+  window.addEventListener(
+    "keydown", key.downHandler.bind(key), false
+  );
+  window.addEventListener(
+    "keyup", key.upHandler.bind(key), false
+  );
+  return key;
+}
+
+let redNote = new Note(40, 0x980000, 250, -40);
+let greenNote = new Note(40, 0x009800, 400, -40);
+let blueNote = new Note(40, 0x000098, 550, -40);
+
+function makeNotes(color){
+	if(color == "red"){
+		notes.push(redNote);
+		gameScene.addChild(redNote);
+	}
+	else if(color == "green"){
+		notes.push(greenNote);
+		gameScene.addChild(greenNote);
+	}
+	else{
+		notes.push(blueNote);
+		gameScene.addChild(blueNote);
 	}
 
-	function increaseScoreBy(value){
-		score += value;
-		//change score text
-		scoreLabel.text = `Score ${score}`;
+}
+
+function hitRightNote(){
+	/*let redBounds = redCircle.getBounds();
+	let greenBounds = greenCircle.getBounds();
+	let blueBounds = blueCircle.getBounds();
+	*/
+
+	while (notes.length != 0){
+		if (notes[0] == redNote){
+			redNote.isAlive = false;
+			gameScene.removeChild(redNote);
+			return (redCircle.contains(redNote.getX(),redNote.getY()))
+		}
+
+		if (notes[0] == greenNote){
+			greenNote.isAlive = false;
+			gameScene.removeChild(greenNote);
+			return (greenCircle.contains(greenNote.getX(),greenNote.getY()))
+		}
+
+		if (notes[0] == blueNote){
+			blueNote.isAlive = false;
+			gameScene.removeChild(blueNote);
+			return (blueCircle.contains(blueNote.getX(),blueNote.getY()))
+		}
 	}
-
-	function increaseStreakBy(value){
-		streak += value;
-		//change score text
-		streakLabel.text = `Streak ${streak}`;
-	}
-
-	function startGame(){
-		startScene.visible = false;
-    gameOverScene.visible = false;
-    gameScene.visible = true;
-
-		score = 0;
-		mistakes = 8;
+}
 
 
-	}
+function end(){
+	notes.foreach(n => gameScene.removeChild(n));
+	notes = [];
+
+	gameOverScoreLabel.text = `Your final score: ${score}`;
+
+}

@@ -1,5 +1,5 @@
-class Button extends PIXI.Graphics{
-  constructor(radius, color, x, y){
+class Note extends PIXI.Graphics{
+  constructor(radius=40, color, x, y){
     super();
     this.beginFill(color);
     this.drawCircle(0,0,radius);
@@ -8,12 +8,22 @@ class Button extends PIXI.Graphics{
     this.y = y;
     this.radius = radius;
 
-    this.fwd = getRandomUnitVector();
+    this.fwd = {x:0, y:1};
+    this.speed = 200;
     this.isAlive = true;
+    Object.seal(this);
   }
 
   move(dt=1/60){
     this.x += this.fwd.x * this.speed * dt;
     this.y += this.fwd.y * this.speed * dt;
+  }
+
+  getX(){
+    return this.x;
+  }
+
+  getY(){
+    return this.y;
   }
 }
