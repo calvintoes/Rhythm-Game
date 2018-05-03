@@ -11,14 +11,23 @@ let stage;
 //game variables
 let startScene, gameScene, gameOverScene;
 let scoreLabel;
-let mistakes = 8;
+let gameOverScoreLabel;
+let mistakes = 5;
 let score = 0;
-let notes = [];
+
+let redNotes = [];
+let greenNotes = [];
+let blueNotes = [];
+
 let streak = 0;
 let streakLabel;
 let redCircle, greenCircle, blueCircle;
-let noteColors = ["red", "green", "blue"];
 
+let letterF = keyboard(70),
+		letterG = keyboard(71),
+		letterH = keyboard(72);
+let timer = 0;
+let paused = true;
 setup();
 
 function setup() {
@@ -55,92 +64,114 @@ function setup() {
 
 		*/
 
-	//keyboard events
-	let letterF = keyboard(70),
-			letterG = keyboard(71),
-			letterH = keyboard(72);
 
-	letterF.press = () =>{
-		//console.log("FFFFFFF");
-		redCircle.beginFill(0xFF9C9C);
-		redCircle.endFill();
-		gameScene.addChild(redCircle);
-		gameScene.removeChild(redCircle);
-	};
-
-	letterF.release = () =>{
-		//console.log("releasedF");
-		redCircle.beginFill(0xB20808);
-		redCircle.endFill
-		gameScene.addChild(redCircle);
-	};
-
-	letterG.press = () =>{
-		//console.log("GGGGGG");
-		greenCircle.beginFill(0x9CFF9C);
-		greenCircle.endFill();
-		gameScene.addChild(greenCircle);
-		gameScene.removeChild(greenCircle);
-	};
-
-	letterG.release = () =>{
-		//console.log("releasedG");
-		greenCircle.beginFill(0x08B208);
-		greenCircle.endFill();
-		gameScene.addChild(greenCircle);
-	};
-
-	letterH.press = () =>{
-		//console.log("HHHHHH");
-		blueCircle.beginFill(0x9C9CFF);
-		blueCircle.endFill();
-		gameScene.addChild(blueCircle);
-		gameScene.removeChild(blueCircle);
-	};
-
-	letterH.release = () =>{
-		//console.log("releasedH");
-		blueCircle.beginFill(0x0808B2);
-		blueCircle.endFill();
-		gameScene.addChild(blueCircle);
-	};
 
 
     //Start update gameLoop------------------------------------------------------------>>
+		app.ticker.add(() => {
+			if (paused) return;
+
+			timer += 1/60;
+
+			if(Math.floor(timer) % 3 == 0){
+				let rand = Math.floor(Math.random() * Math.floor(3));
+				makeNotes(rand);
+				timer += 1;
+
+			}
+		});
     app.ticker.add(gameLoop);
       function gameLoop(){
+				if (paused) return;
+				//keyboard events
+				letterF.press = () =>{
+					redCircle.beginFill(0xFF9C9C);
+					redCircle.endFill();
+					gameScene.addChild(redCircle);
+					gameScene.removeChild(redCircle);
 
-        //calculate "delta time" for song
-          let dt = 1/app.ticker.FPS;
-          if(dt > 1/12) dt = 1/12;
-
-        //move notes
-          for (let n of notes){
-            n.move(dt)
-          }
-					let rand = Math.floor(Math.random() * Math.floor(3));
-
-					if(dt % 3 == 0){
-						makeNotes(noteColors[rand]);
-					}
-
-					if(hitRightNote){
-						streak++;
-						score += 100;
+					if(hitRightNote("F")){
+						increaseScoreBy(100);
+						increaseStreakBy(1);
 					}
 					else{
-						streak = 0;
-						if (mistakes != 0){
-							mistakes -= 1;
-						}
-						else{
-							end();
-							startScene.visible = false;
-							gameScene.visible = false;
-							gameOverScene.visible = true;
-							return;
-						}
+						resetStreak();
+						checkMistakes();
 					}
+				};
+
+				letterF.release = () =>{
+					redCircle.beginFill(0xB20808);
+					redCircle.endFill
+					gameScene.addChild(redCircle);
+				};
+
+				letterG.press = () =>{
+					greenCircle.beginFill(0x9CFF9C);
+					greenCircle.endFill();
+					gameScene.addChild(greenCircle);
+					gameScene.removeChild(greenCircle);
+
+					if(hitRightNote("G")){
+						increaseScoreBy(100);
+						increaseStreakBy(1);
+					}
+					else{
+						resetStreak();
+						checkMistakes();
+					}
+				};
+
+				letterG.release = () =>{
+					greenCircle.beginFill(0x08B208);
+					greenCircle.endFill();
+					gameScene.addChild(greenCircle);
+				};
+
+				letterH.press = () =>{
+					blueCircle.beginFill(0x9C9CFF);
+					blueCircle.endFill();
+					gameScene.addChild(blueCircle);
+					gameScene.removeChild(blueCircle);
+
+					if(hitRightNote("H")){
+						increaseScoreBy(100);
+						increaseStreakBy(1);
+					}
+					else{
+						resetStreak();
+						checkMistakes();
+					}
+				};
+
+				letterH.release = () =>{
+					blueCircle.beginFill(0x0808B2);
+					blueCircle.endFill();
+					gameScene.addChild(blueCircle);
+				};
+
+        //move notes
+          for (let r of redNotes){
+						redNotes = redNotes.filter(r=>r.isAlive);
+            r.move()
+						if ((r.getY() > 589) && !(hitRightNote("F"))){
+							checkMistakes();
+						}
+          }
+					for (let g of greenNotes ){
+						greenNotes = greenNotes.filter(g=>g.isAlive);
+            g.move()
+						if ((g.getY() > 589) && !(hitRightNote("G"))){
+							checkMistakes();
+						}
+          }
+					for (let b of blueNotes){
+						blueNotes = blueNotes.filter(b=>b.isAlive);
+						b.move()
+						if ((b.getY() > 589) && !(hitRightNote("H"))){
+							checkMistakes();
+						}
+          }
 
 			//------------------------------------END GAME LOOP------------------------------->>
 		}
@@ -225,6 +256,7 @@ function createVisualsForScene(){
 		redCircle.endFill();
 		gameScene.addChild(redCircle);
 
+
 		let greenLine = new PIXI.Graphics();
 		redLine.beginFill(0x00FF00);
 		redLine.drawRect(350,0,100,600);
@@ -260,29 +292,40 @@ function createVisualsForScene(){
 
 		// 			----------GAME OVER SCENE---------------  	>>
 
-		let gameOverText = new PIXI.Text("Game over! \n		find a new band to join");
+		let gameOverText = new PIXI.Text("Game over!");
 		textStyle = new PIXI.TextStyle({
-			fill: 0x000000,
-			fontSize: 64,
+			fill: 0xFF0000,
+			fontSize: 58,
 			fontFamily: "Arial"
 		});
 		gameOverText.style = textStyle;
-		gameOverText.x = 250;
-		gameOverText.y = sceneHeight/2 - 200;
+		gameOverText.x = 280;
+		gameOverText.y = sceneHeight/2 - 100;
 		gameOverScene.addChild(gameOverText);
 
-		let gameOverScoreLabel = new PIXI.Text();
+		gameOverScoreLabel = new PIXI.Text();
     textStyle = new PIXI.TextStyle({
         fill:0xFFFFFF,
         fontSize:36,
         fontFamily: "Futura",
         stroke: 0xFF0000,
-        strokeThickness: 6
+        strokeThickness: 2
     });
     gameOverScoreLabel.style = textStyle;
     gameOverScoreLabel.x = 200;
     gameOverScoreLabel.y = sceneHeight/2 + 50;
     gameOverScene.addChild(gameOverScoreLabel);
+
+		let playAgainButton = new PIXI.Text("Play Again?");
+    playAgainButton.style = buttonStyle;
+    playAgainButton.x = 280;
+    playAgainButton.y = sceneHeight - 150;
+    playAgainButton.interactive = true;
+    playAgainButton.buttonMode = true;
+    playAgainButton.on("pointerup",startGame); // startGame is a function reference
+    playAgainButton.on('pointerover',e=>e.target.alpha = 0.7); // concise arrow function with no brackets
+    playAgainButton.on('pointerout',e=>e.currentTarget.alpha = 1.0); // ditto
+    gameOverScene.addChild(playAgainButton);
 
 		// 		-----------------------------------------------		>>
 
@@ -292,6 +335,11 @@ function increaseScoreBy(value){
 	score += value;
 	//change score text
 	scoreLabel.text = `Score: ${score}`;
+}
+
+function resetStreak(){
+	streak = 0;
+	streakLabel.text = `Streak: ${streak}`;
 }
 
 function increaseStreakBy(value){
@@ -307,6 +355,11 @@ function startGame(){
 
 	score = 0;
 	mistakes = 8;
+	timer = 0;
+	resetStreak();
+	increaseScoreBy(0);
+	paused = false;
+
 
 }
 
@@ -347,58 +400,97 @@ function keyboard(keyCode) {
   return key;
 }
 
-let redNote = new Note(40, 0x980000, 250, -40);
-let greenNote = new Note(40, 0x009800, 400, -40);
-let blueNote = new Note(40, 0x000098, 550, -40);
+function makeNotes(colorIdx){
+	let red = new Note(40, 0x980000, 250, -40);
+	let green = new Note(40, 0x009800, 400, -40);
+	let blue = new Note(40, 0x000098, 550, -40);
+	let noteColors = [red, green, blue];
 
-function makeNotes(color){
-	if(color == "red"){
-		notes.push(redNote);
-		gameScene.addChild(redNote);
+	if (colorIdx == 0){
+		redNotes.push(red);
 	}
-	else if(color == "green"){
-		notes.push(greenNote);
-		gameScene.addChild(greenNote);
+	if (colorIdx == 1){
+		greenNotes.push(green);
 	}
-	else{
-		notes.push(blueNote);
-		gameScene.addChild(blueNote);
+	if (colorIdx == 2) {
+		blueNotes.push(blue);
 	}
 
-}
+	gameScene.addChild(noteColors[colorIdx]);
+	}
 
-function hitRightNote(){
+
+
+function hitRightNote(keypress){
 	/*let redBounds = redCircle.getBounds();
 	let greenBounds = greenCircle.getBounds();
 	let blueBounds = blueCircle.getBounds();
 	*/
+	let redCircleCopy = new PIXI.Circle(250,555,40);
+	let greenCircleCopy = new PIXI.Circle(400,555,40);
+	let blueCircleCopy = new PIXI.Circle(550,555,40);
 
-	while (notes.length != 0){
-		if (notes[0] == redNote){
-			redNote.isAlive = false;
-			gameScene.removeChild(redNote);
-			return (redCircle.contains(redNote.getX(),redNote.getY()))
+	if (keypress == "F"){
+		if (redNotes != 0){
+			let red = redNotes[0];
+			if(redCircleCopy.contains(red.x, red.y)){
+				red.isAlive = false;
+				gameScene.removeChild(red);
+				return true;
+			}
 		}
 
-		if (notes[0] == greenNote){
-			greenNote.isAlive = false;
-			gameScene.removeChild(greenNote);
-			return (greenCircle.contains(greenNote.getX(),greenNote.getY()))
+	}
+
+	if (keypress == "G"){
+		if (greenNotes != 0){
+			let green = greenNotes[0];
+			if (greenCircleCopy.contains(green.x, green.y)){
+				green.isAlive = false;
+				gameScene.removeChild(green);
+				return true;
+			}
 		}
 
-		if (notes[0] == blueNote){
-			blueNote.isAlive = false;
-			gameScene.removeChild(blueNote);
-			return (blueCircle.contains(blueNote.getX(),blueNote.getY()))
+	}
+
+	if (keypress == "H"){
+		if (blueNotes != 0){
+			let blue = blueNotes[0];
+			if (blueCircleCopy.contains(blue.x, blue.y)){
+				blue.isAlive = false;
+				gameScene.removeChild(blue);
+				return true;
+			}
 		}
+
 	}
 }
 
 
 function end(){
-	notes.foreach(n => gameScene.removeChild(n));
-	notes = [];
+	paused = true;
+	redNotes.forEach(r => gameScene.removeChild(r));
+	redNotes = [];
+	blueNotes.forEach(b => gameScene.removeChild(b));
+	blueNotes = [];
+	greenNotes.forEach(g => gameScene.removeChild(g));
+	greenNotes = [];
+
 
 	gameOverScoreLabel.text = `Your final score: ${score}`;
 
+}
+
+function checkMistakes(){
+	if (mistakes != 0){
+		mistakes -= 1;
+	}
+	else{
+		end();
+		startScene.visible = false;
+		gameScene.visible = false;
+		gameOverScene.visible = true;
+
+	}
 }

@@ -9,14 +9,14 @@ class Note extends PIXI.Graphics{
     this.radius = radius;
 
     this.fwd = {x:0, y:1};
-    this.speed = 200;
+    this.speed = 2;
     this.isAlive = true;
     Object.seal(this);
   }
 
-  move(dt=1/60){
-    this.x += this.fwd.x * this.speed * dt;
-    this.y += this.fwd.y * this.speed * dt;
+  move(){
+    this.x += this.fwd.x * this.speed ;
+    this.y += this.fwd.y * this.speed ;
   }
 
   getX(){
@@ -25,5 +25,9 @@ class Note extends PIXI.Graphics{
 
   getY(){
     return this.y;
+  }
+
+  getBounds(){
+    return this.getBounds(true);
   }
 }
