@@ -12,6 +12,9 @@ let stage;
 let startScene, gameScene, gameOverScene;
 let scoreLabel;
 let gameOverScoreLabel;
+let song;
+let errorSound;
+let gameOverSound;
 let mistakes = 5;
 let score = 0;
 
@@ -63,6 +66,17 @@ function setup() {
     });
 
 		*/
+		song = new Howl({
+			src: ['WHatIveDone.mp3']
+		});
+		errorSound = new Howl({
+			src:['error_note.wav']
+		});
+		errorSound.volume(0.5);
+		gameOverSound = new Howl({
+			src:['game_over.wav']
+		});
+		gameOverSound.volume(0.7);
 
 
 
@@ -75,7 +89,9 @@ function setup() {
 
 			if(Math.floor(timer) % 3 == 0){
 				let rand = Math.floor(Math.random() * Math.floor(3));
+				let rand2 = Math.floor(Math.random() * Math.floor(3));
 				makeNotes(rand);
+				makeNotes(rand2);
 				timer += 1;
 
 			}
@@ -155,6 +171,11 @@ function setup() {
 						redNotes = redNotes.filter(r=>r.isAlive);
             r.move()
 						if ((r.getY() > 589) && !(hitRightNote("F"))){
+							resetStreak();
+							checkMistakes();
+						}
+						if ((r.getY() > 589)){
+							resetStreak();
 							checkMistakes();
 						}
           }
@@ -162,6 +183,11 @@ function setup() {
 						greenNotes = greenNotes.filter(g=>g.isAlive);
             g.move()
 						if ((g.getY() > 589) && !(hitRightNote("G"))){
+							resetStreak();
+							checkMistakes();
+						}
+						if ((g.getY() > 589) ){
+							resetStreak();
 							checkMistakes();
 						}
           }
@@ -169,6 +195,11 @@ function setup() {
 						blueNotes = blueNotes.filter(b=>b.isAlive);
 						b.move()
 						if ((b.getY() > 589) && !(hitRightNote("H"))){
+							resetStreak();
+							checkMistakes();
+						}
+						if ((b.getY() > 589)){
+							resetStreak();
 							checkMistakes();
 						}
           }
@@ -184,15 +215,21 @@ function createVisualsForScene(){
 	  });
 
 	/*        -----------START SCENE-------------     */
-	  let startLabel1 = new PIXI.Text("Tear The Stage!");
+	  let startLabel1 = new PIXI.Text("TEAR THE STAGE!");
 	  startLabel1.style = new PIXI.TextStyle({
 	    fill: 0xFFFFFF,
-	    fontSize: 96,
+	    fontSize: 80,
 	    fontFamily: "Arial"
 	  });
 	  startLabel1.x = 50;
 	  startLabel1.y = 120;
 	  startScene.addChild(startLabel1);
+		let banner = new PIXI.Graphics();
+		banner.beginFill(0xC4FAFF);
+		banner.drawRect(0,50,800,30);
+		banner.endFill();
+		startScene.addChild(banner);
+
 
 		let startLabel2 = new PIXI.Text("Join the band");
 		startLabel2.style = new PIXI.TextStyle({
@@ -215,6 +252,16 @@ function createVisualsForScene(){
 		startButton.on("pointerover", e=>e.target.alpha = 0.7);
 		startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
 		startScene.addChild(startButton);
+
+		let instructionText = new PIXI.Text("Use 'F', 'G', 'H' to play");
+		instructionText.style = new PIXI.TextStyle({
+			fill:0xEFEFEF,
+			fontSize: 30,
+			fontFamily: "Arial"
+		});
+		instructionText.x = 250;
+		instructionText.y = 380;
+		startScene.addChild(instructionText);
 
 
 		/*     ------------Game Scene-------------- 	*/
@@ -299,7 +346,7 @@ function createVisualsForScene(){
 			fontFamily: "Arial"
 		});
 		gameOverText.style = textStyle;
-		gameOverText.x = 280;
+		gameOverText.x = 260;
 		gameOverText.y = sceneHeight/2 - 100;
 		gameOverScene.addChild(gameOverText);
 
@@ -312,7 +359,7 @@ function createVisualsForScene(){
         strokeThickness: 2
     });
     gameOverScoreLabel.style = textStyle;
-    gameOverScoreLabel.x = 200;
+    gameOverScoreLabel.x = 240;
     gameOverScoreLabel.y = sceneHeight/2 + 50;
     gameOverScene.addChild(gameOverScoreLabel);
 
@@ -359,7 +406,7 @@ function startGame(){
 	resetStreak();
 	increaseScoreBy(0);
 	paused = false;
-
+	song.seek(3,song.play());
 
 }
 
@@ -438,6 +485,7 @@ function hitRightNote(keypress){
 				gameScene.removeChild(red);
 				return true;
 			}
+			return false;
 		}
 
 	}
@@ -450,6 +498,7 @@ function hitRightNote(keypress){
 				gameScene.removeChild(green);
 				return true;
 			}
+			return false;
 		}
 
 	}
@@ -462,8 +511,8 @@ function hitRightNote(keypress){
 				gameScene.removeChild(blue);
 				return true;
 			}
+			return false;
 		}
-
 	}
 }
 
@@ -477,13 +526,15 @@ function end(){
 	greenNotes.forEach(g => gameScene.removeChild(g));
 	greenNotes = [];
 
-
+	song.stop();
+	gameOverSound.play();
 	gameOverScoreLabel.text = `Your final score: ${score}`;
 
 }
 
 function checkMistakes(){
 	if (mistakes != 0){
+		errorSound.play();
 		mistakes -= 1;
 	}
 	else{
