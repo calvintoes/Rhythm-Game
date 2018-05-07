@@ -9,9 +9,10 @@ const sceneHeight = app.view.height;
 let stage;
 
 //game variables
-let startScene, gameScene, gameOverScene;
+let startScene, menuScene, gameScene, gameOverScene;
 let scoreLabel;
 let gameOverScoreLabel;
+let difficulty;
 let song;
 let errorSound;
 let gameOverSound;
@@ -25,6 +26,7 @@ let blueNotes = [];
 let streak = 0;
 let streakLabel;
 let redCircle, greenCircle, blueCircle;
+let successRed, successBlue, successGreen;
 
 let letterF = keyboard(70),
 		letterG = keyboard(71),
@@ -67,18 +69,30 @@ function setup() {
 
 		*/
 		song = new Howl({
-			src: ['WHatIveDone.mp3']
+			src: ['WhatIveDone.mp3']
 		});
 		errorSound = new Howl({
 			src:['error_note.wav']
 		});
-		errorSound.volume(0.5);
+		errorSound.volume(0.2);
 		gameOverSound = new Howl({
 			src:['game_over.wav']
 		});
 		gameOverSound.volume(0.7);
 
-
+		//sucess markers
+		successRed = new PIXI.Graphics();
+		successRed.beginFill(0xFFFF33);
+		successRed.drawCircle(250,555,40)
+		successRed.endFill();
+		successGreen = new PIXI.Graphics();
+		successGreen.beginFill(0xFFFF33);
+		successGreen.drawCircle(400,555,40);
+		successGreen.endFill();
+		successBlue	= new PIXI.Graphics();
+		successBlue.beginFill(0xFFFF33);
+		successBlue.drawCircle(550,555,40);
+		successBlue.endFill();
 
 
     //Start update gameLoop------------------------------------------------------------>>
@@ -107,6 +121,7 @@ function setup() {
 					gameScene.removeChild(redCircle);
 
 					if(hitRightNote("F")){
+						gameScene.addChild(successRed);
 						increaseScoreBy(100);
 						increaseStreakBy(1);
 					}
@@ -120,6 +135,7 @@ function setup() {
 					redCircle.beginFill(0xB20808);
 					redCircle.endFill
 					gameScene.addChild(redCircle);
+					gameScene.removeChild(successRed);
 				};
 
 				letterG.press = () =>{
@@ -129,6 +145,7 @@ function setup() {
 					gameScene.removeChild(greenCircle);
 
 					if(hitRightNote("G")){
+						gameScene.addChild(successGreen);
 						increaseScoreBy(100);
 						increaseStreakBy(1);
 					}
@@ -142,6 +159,7 @@ function setup() {
 					greenCircle.beginFill(0x08B208);
 					greenCircle.endFill();
 					gameScene.addChild(greenCircle);
+					gameScene.removeChild(successGreen);
 				};
 
 				letterH.press = () =>{
@@ -151,6 +169,7 @@ function setup() {
 					gameScene.removeChild(blueCircle);
 
 					if(hitRightNote("H")){
+						gameScene.addChild(successBlue);
 						increaseScoreBy(100);
 						increaseStreakBy(1);
 					}
@@ -164,17 +183,18 @@ function setup() {
 					blueCircle.beginFill(0x0808B2);
 					blueCircle.endFill();
 					gameScene.addChild(blueCircle);
+					gameScene.removeChild(successBlue);
 				};
 
         //move notes
           for (let r of redNotes){
 						redNotes = redNotes.filter(r=>r.isAlive);
             r.move()
-						if ((r.getY() > 589) && !(hitRightNote("F"))){
+						if ((r.getY() > 580) && !(hitRightNote("F"))){
 							resetStreak();
 							checkMistakes();
 						}
-						if ((r.getY() > 589)){
+						if ((r.getY() > 580)){
 							resetStreak();
 							checkMistakes();
 						}
@@ -182,11 +202,11 @@ function setup() {
 					for (let g of greenNotes ){
 						greenNotes = greenNotes.filter(g=>g.isAlive);
             g.move()
-						if ((g.getY() > 589) && !(hitRightNote("G"))){
+						if ((g.getY() > 580) && !(hitRightNote("G"))){
 							resetStreak();
 							checkMistakes();
 						}
-						if ((g.getY() > 589) ){
+						if ((g.getY() > 580) ){
 							resetStreak();
 							checkMistakes();
 						}
@@ -194,11 +214,11 @@ function setup() {
 					for (let b of blueNotes){
 						blueNotes = blueNotes.filter(b=>b.isAlive);
 						b.move()
-						if ((b.getY() > 589) && !(hitRightNote("H"))){
+						if ((b.getY() > 580) && !(hitRightNote("H"))){
 							resetStreak();
 							checkMistakes();
 						}
-						if ((b.getY() > 589)){
+						if ((b.getY() > 580)){
 							resetStreak();
 							checkMistakes();
 						}
@@ -209,12 +229,19 @@ function setup() {
 }
 function createVisualsForScene(){
 	  let buttonStyle = new PIXI.TextStyle({
-	    fill: 0x0000FF,
+	    fill: 0xFFFFFF,
 	    fontSize: 48,
 	    fontFamily: "Arial"
 	  });
 
 	/*        -----------START SCENE-------------     */
+
+		let banner = new PIXI.Graphics();
+		banner.beginFill(0xC4FAFF);
+		banner.drawRect(0,50,800,30);
+		banner.endFill();
+		startScene.addChild(banner);
+
 	  let startLabel1 = new PIXI.Text("TEAR THE STAGE!");
 	  startLabel1.style = new PIXI.TextStyle({
 	    fill: 0xFFFFFF,
@@ -224,11 +251,6 @@ function createVisualsForScene(){
 	  startLabel1.x = 50;
 	  startLabel1.y = 120;
 	  startScene.addChild(startLabel1);
-		let banner = new PIXI.Graphics();
-		banner.beginFill(0xC4FAFF);
-		banner.drawRect(0,50,800,30);
-		banner.endFill();
-		startScene.addChild(banner);
 
 
 		let startLabel2 = new PIXI.Text("Join the band");
@@ -239,7 +261,7 @@ function createVisualsForScene(){
 			fontFamily: "Arial"
 		});
 		startLabel2.x = 300;
-		startLabel2.y = 300;
+		startLabel2.y = 260;
 		startScene.addChild(startLabel2);
 
 		let startButton = new PIXI.Text("Play");
@@ -248,7 +270,7 @@ function createVisualsForScene(){
 		startButton.y = sceneHeight - 150;
 		startButton.interactive = true;
 		startButton.buttonMode = true;
-		startButton.on("pointerup", startGame); //startGame is a function ref
+		startButton.on("pointerup", startGame);
 		startButton.on("pointerover", e=>e.target.alpha = 0.7);
 		startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
 		startScene.addChild(startButton);
@@ -260,7 +282,7 @@ function createVisualsForScene(){
 			fontFamily: "Arial"
 		});
 		instructionText.x = 250;
-		instructionText.y = 380;
+		instructionText.y = 350;
 		startScene.addChild(instructionText);
 
 
@@ -334,7 +356,7 @@ function createVisualsForScene(){
 		lineBorder.endFill();
 		gameScene.addChild(lineBorder);
 
-		//--------------------------------------------
+		//-------------------------------------------------------
 
 
 		// 			----------GAME OVER SCENE---------------  	>>
@@ -342,35 +364,35 @@ function createVisualsForScene(){
 		let gameOverText = new PIXI.Text("Game over!");
 		textStyle = new PIXI.TextStyle({
 			fill: 0xFF0000,
-			fontSize: 58,
+			fontSize: 82,
 			fontFamily: "Arial"
 		});
 		gameOverText.style = textStyle;
-		gameOverText.x = 260;
+		gameOverText.x = 200;
 		gameOverText.y = sceneHeight/2 - 100;
 		gameOverScene.addChild(gameOverText);
 
 		gameOverScoreLabel = new PIXI.Text();
     textStyle = new PIXI.TextStyle({
         fill:0xFFFFFF,
-        fontSize:36,
+        fontSize: 28,
         fontFamily: "Futura",
         stroke: 0xFF0000,
         strokeThickness: 2
     });
     gameOverScoreLabel.style = textStyle;
-    gameOverScoreLabel.x = 240;
-    gameOverScoreLabel.y = sceneHeight/2 + 50;
+    gameOverScoreLabel.x = 30;
+    gameOverScoreLabel.y = 500;
     gameOverScene.addChild(gameOverScoreLabel);
 
-		let playAgainButton = new PIXI.Text("Play Again?");
+		let playAgainButton = new PIXI.Text("Try Again?");
     playAgainButton.style = buttonStyle;
-    playAgainButton.x = 280;
-    playAgainButton.y = sceneHeight - 150;
+    playAgainButton.x = 500;
+    playAgainButton.y = 490;
     playAgainButton.interactive = true;
     playAgainButton.buttonMode = true;
     playAgainButton.on("pointerup",startGame); // startGame is a function reference
-    playAgainButton.on('pointerover',e=>e.target.alpha = 0.7); // concise arrow function with no brackets
+    playAgainButton.on('pointerover',e=>e.target.alpha = 0.5); // concise arrow function with no brackets
     playAgainButton.on('pointerout',e=>e.currentTarget.alpha = 1.0); // ditto
     gameOverScene.addChild(playAgainButton);
 
@@ -399,14 +421,14 @@ function startGame(){
 	startScene.visible = false;
   gameOverScene.visible = false;
   gameScene.visible = true;
-
+	song.seek(2.8,song.play());
 	score = 0;
 	mistakes = 8;
 	timer = 0;
 	resetStreak();
 	increaseScoreBy(0);
 	paused = false;
-	song.seek(3,song.play());
+
 
 }
 
